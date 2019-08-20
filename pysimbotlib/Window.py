@@ -8,6 +8,7 @@ from kivy.app import App
 from kivy.core.window import Window
 from kivy.uix.widget import Widget
 from kivy.lang import Builder
+import platform
 from kivy.properties import NumericProperty,\
                             ReferenceListProperty,\
                             ObjectProperty
@@ -16,6 +17,7 @@ from kivy.vector import Vector
 from kivy.clock import Clock
 from random import randint
 from kivy.logger import Logger
+from .scaler import Scaler
 
 from . import Obstacle
 from . import Objective
@@ -53,6 +55,7 @@ class PySimbotMap(Widget):
         self.iteration += 1
         self.before_update()
         for robot in self.robots:
+            #robot.before_update()
             robot.update()
         self.after_update()
 
@@ -71,7 +74,7 @@ class PySimbotApp(App):
         self.simbotMap = None
     
     def build(self):
-        Window.size = (800, 600)
+        Window.size = (700, 600)
         obmap = Builder.load_file(self.mapPath)
         robot = Builder.load_file('pysimbotlib/widget/robot.kv')
         sbmap = Builder.load_file('pysimbotlib/widget/simbotmap.kv')
@@ -102,4 +105,11 @@ class PySimbotApp(App):
             self.simbotMap.robots.append(r)
 
         Clock.schedule_interval(self.simbotMap.update, self.interval)
-        return self.simbotMap
+
+        if platform.system() == 'Darwin':
+            self._scaler = Scaler(size=Window.size, scale=2)
+            Window.add_widget(self._scaler)
+            parent = self._scaler or Window
+            parent.add_widget(self.simbotMap)
+        else:
+            return self.simbotMap
